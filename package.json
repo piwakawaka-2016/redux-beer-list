@@ -36,6 +36,7 @@
     "budo": "^8.2.0",
     "gh-pages": "^0.11.0",
     "redux": "^3.6.0",
+    "superagent": "^3.0.0",
     "tap-spec": "^4.1.1",
     "tape": "^4.5.1",
     "uglifyify": "^3.0.1",

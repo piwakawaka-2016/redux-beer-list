@@ -1,6 +1,7 @@
 const html = require('yo-yo')
 const redux = require('redux')
 const clone = require('clone')
+const request = require('superagent')
 
 const beers = require('./test-beers').beers
 
@@ -30,19 +31,20 @@ function appTemplate(state, dispatch) {
       ${errorTemplate(state)} 
       ${loadingTemplate(state)} 
       ${beersTemplate(state, dispatch)}
+      <button onclick=${() => loadBeers(dispatch)}>Refresh</button>
     </div> 
   ` 
 }
 
 function errorTemplate({error}) {
   return error 
-    ? html`<h2 id="error">There was an error loading ze beersie: ${error}</h2>`
+    ? html`<h2 id="error">There was an error loading ze beersies: ${error}</h2>`
     : html ``
 }
 
 function loadingTemplate({loadingBeers}) {
   return loadingBeers 
-    ? html`<h2 id="loading">Loading beers</h2>`
+    ? html`<h2 id="loading">Loading beers...</h2>`
     : html ``
 }
 
@@ -52,10 +54,11 @@ function reducer(state, action) {
     case 'BEERS_ADDED':
       newState.beers = action.payload
       newState.loadingBeers = false
-      newState.errors = ''
+      newState.error = ''
       return newState
     case 'LOADING_BEERS':
       newState.loadingBeers = true 
+      newState.beers = []
       return newState
     case 'LOADING_ERROR':
       newState.loadingBeers = false 
@@ -78,8 +81,19 @@ subscribe(() =>{
 })
 
 function init() {
-  dispatch({type: 'LOADING_BEERS'}) 
-  setTimeout(() => dispatch({type: 'BEERS_ADDED', payload: beers}), 300)
+  loadBeers(dispatch)
 }
-init()
 
+const url = 'https://rogue-beers.herokuapp.com/api/v1/beers'
+
+function loadBeers(dispatch) {
+  dispatch({type: 'LOADING_BEERS'}) 
+  request
+    .get(url)
+    .end((err, res) =>{
+      if(err) return dispatch({type: 'LOADING_ERROR', payload: err.message}) 
+      dispatch({type: 'BEERS_ADDED', payload: res.body.beers}) 
+    })
+}
+
+init()
